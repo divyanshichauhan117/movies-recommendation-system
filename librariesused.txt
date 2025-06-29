@@ -1,0 +1,10 @@
+pandas - Data manipulation and analysis
+
+numpy - Numerical computing
+
+scikit-learn - Machine learning algorithms
+
+matplotlib/seaborn - Data visualization
+
+Google Colab - Cloud-based Python environment
+

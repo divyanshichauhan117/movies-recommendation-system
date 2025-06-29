@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎬 AI Movie Recommender</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(lightyellow, 0%, 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            color: black;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .search-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .search-section h2 {
+            color: #4a5568;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .search-box {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 15px 20px;
+            font-size: 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 50px;
+            outline: none;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .search-input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .search-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            justify-content: center;
+            width: 100%;
+        }
+
+        .search-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .search-button:active {
+            transform: translateY(0);
+        }
+
+        .movie-list {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .movie-list h3 {
+            color: #4a5568;
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+        }
+
+        .movie-item {
+            background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .movie-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            border-color: #667eea;
+        }
+
+        .movie-item.selected {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+        }
+
+        .movie-title {
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+        }
+
+        .movie-details {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .recommendations-section {
+            grid-column: 1 / -1;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .recommendations-section h2 {
+            color: #4a5568;
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+            text-align: center;
+        }
+
+        .selected-movie {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .selected-movie h3 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+
+        .cluster-info {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+        }
+
+        .recommendations-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .recommendation-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f7fafc 100%);
+            border-radius: 15px;
+            padding: 25px;
+            border: 2px solid #e2e8f0;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .recommendation-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .recommendation-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+            border-color: #667eea;
+        }
+
+        .recommendation-rank {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .recommendation-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 15px;
+            margin-right: 40px;
+        }
+
+        .recommendation-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .detail-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            color: #4a5568;
+        }
+
+        .rating-bar {
+            background: #e2e8f0;
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .rating-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+
+        .genres {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+
+        .genre-tag {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .no-results {
+            text-align: center;
+            color: #718096;
+            font-style: italic;
+            padding: 40px;
+        }
+
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+            font-size: 1.1rem;
+            color: #667eea;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #e2e8f0;
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .stats-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #667eea;
+            display: block;
+        }
+
+        .stat-label {
+            color: #4a5568;
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .recommendations-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .recommendation-details {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎬 AI Movie Recommender</h1>
+            <p>Discover your next favorite movie with machine learning powered recommendations</p>
+        </div>
+
+        <div class="stats-section">
+            <div class="stat-card">
+                <span class="stat-number" id="totalMovies">100</span>
+                <div class="stat-label">Total Movies</div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number" id="totalClusters">5</span>
+                <div class="stat-label">Movie Clusters</div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number" id="avgRating">7.8</span>
+                <div class="stat-label">Average Rating</div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number" id="recommendations">0</span>
+                <div class="stat-label">Recommendations Made</div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="search-section">
+                <h2>🔍 Search Movies</h2>
+                <div class="search-box">
+                    <input type="text" class="search-input" id="searchInput" placeholder="Search for a movie...">
+                </div>
+                <button class="search-button" onclick="searchMovies()">
+                    <span>🎯</span>
+                    Get Recommendations
+                </button>
+            </div>
+
+            <div class="movie-list">
+                <h3>📋 Available Movies</h3>
+                <div id="movieList">
+                    <!-- Movies will be populated here -->
+                </div>
+            </div>
+        </div>
+
+        <div class="recommendations-section" id="recommendationsSection" style="display: none;">
+            <h2>🌟 Recommended Movies</h2>
+            <div id="selectedMovieInfo"></div>
+            <div id="recommendationsGrid" class="recommendations-grid"></div>
+        </div>
+    </div>
+
+    <script>
+        // Sample movie data based on the ML project
+        const movieData = [
+            {title: "The Shawshank Redemption", rating: 9.3, year: 1994, duration: 142, cluster: 0, genres: ["Drama"]},
+            {title: "The Godfather", rating: 9.2, year: 1972, duration: 175, cluster: 0, genres: ["Drama", "Crime"]},
+            {title: "The Dark Knight", rating: 9.0, year: 2008, duration: 152, cluster: 1, genres: ["Action", "Drama"]},
+            {title: "Pulp Fiction", rating: 8.9, year: 1994, duration: 154, cluster: 0, genres: ["Drama", "Crime"]},
+            {title: "Forrest Gump", rating: 8.8, year: 1994, duration: 142, cluster: 2, genres: ["Drama", "Romance"]},
+            {title: "Inception", rating: 8.7, year: 2010, duration: 148, cluster: 1, genres: ["Action", "Drama"]},
+            {title: "The Matrix", rating: 8.7, year: 1999, duration: 136, cluster: 1, genres: ["Action"]},
+            {title: "Goodfellas", rating: 8.7, year: 1990, duration: 146, cluster: 0, genres: ["Drama", "Crime"]},
+            {title: "The Lord of the Rings", rating: 8.8, year: 2001, duration: 178, cluster: 3, genres: ["Action", "Drama"]},
+            {title: "Fight Club", rating: 8.8, year: 1999, duration: 139, cluster: 0, genres: ["Drama"]},
+            {title: "Star Wars", rating: 8.6, year: 1977, duration: 121, cluster: 3, genres: ["Action"]},
+            {title: "Casablanca", rating: 8.5, year: 1942, duration: 102, cluster: 2, genres: ["Drama", "Romance"]},
+            {title: "Schindler's List", rating: 8.9, year: 1993, duration: 195, cluster: 0, genres: ["Drama"]},
+            {title: "12 Angry Men", rating: 8.9, year: 1957, duration: 96, cluster: 0, genres: ["Drama"]},
+            {title: "Titanic", rating: 7.8, year: 1997, duration: 194, cluster: 2, genres: ["Drama", "Romance"]},
+            {title: "Avatar", rating: 7.8, year: 2009, duration: 162, cluster: 3, genres: ["Action"]},
+            {title: "The Avengers", rating: 8.0, year: 2012, duration: 143, cluster: 1, genres: ["Action"]},
+            {title: "Jurassic Park", rating: 8.1, year: 1993, duration: 127, cluster: 3, genres: ["Action"]},
+            {title: "Terminator 2", rating: 8.5, year: 1991, duration: 137, cluster: 1, genres: ["Action"]},
+            {title: "Alien", rating: 8.4, year: 1979, duration: 117, cluster: 4, genres: ["Horror"]},
+            {title: "The Shining", rating: 8.4, year: 1980, duration: 146, cluster: 4, genres: ["Horror"]},
+            {title: "Apocalypse Now", rating: 8.4, year: 1979, duration: 147, cluster: 0, genres: ["Drama"]},
+            {title: "Gladiator", rating: 8.5, year: 2000, duration: 155, cluster: 1, genres: ["Action", "Drama"]},
+            {title: "Saving Private Ryan", rating: 8.6, year: 1998, duration: 169, cluster: 1, genres: ["Action", "Drama"]},
+            {title: "Interstellar", rating: 8.6, year: 2014, duration: 169, cluster: 3, genres: ["Drama"]},
+            {title: "The Prestige", rating: 8.5, year: 2006, duration: 130, cluster: 0, genres: ["Drama"]},
+            {title: "The Departed", rating: 8.5, year: 2006, duration: 151, cluster: 0, genres: ["Drama", "Crime"]},
+            {title: "Django Unchained", rating: 8.4, year: 2012, duration: 165, cluster: 1, genres: ["Action", "Drama"]},
+            {title: "The Silence of the Lambs", rating: 8.6, year: 1991, duration: 118, cluster: 4, genres: ["Horror", "Drama"]},
+            {title: "Se7en", rating: 8.6, year: 1995, duration: 127, cluster: 4, genres: ["Drama", "Horror"]},
+            {title: "Memento", rating: 8.4, year: 2000, duration: 113, cluster: 0, genres: ["Drama"]},
+            {title: "Her", rating: 8.0, year: 2013, duration: 126, cluster: 2, genres: ["Drama", "Romance"]},
+            {title: "Lost in Translation", rating: 7.7, year: 2003, duration: 102, cluster: 2, genres: ["Drama", "Romance"]},
+            {title: "Iron Man", rating: 7.9, year: 2008, duration: 126, cluster: 1, genres: ["Action"]},
+            {title: "Captain America", rating: 6.9, year: 2011, duration: 124, cluster: 1, genres: ["Action"]},
+            {title: "Thor", rating: 7.0, year: 2011, duration: 115, cluster: 1, genres: ["Action"]},
+            {title: "Black Panther", rating: 7.3, year: 2018, duration: 134, cluster: 1, genres: ["Action"]},
+            {title: "Spider-Man", rating: 7.3, year: 2002, duration: 121, cluster: 1, genres: ["Action"]},
+            {title: "Batman Begins", rating: 8.2, year: 2005, duration: 140, cluster: 1, genres: ["Action", "Drama"]},
+            {title: "Wonder Woman", rating: 7.4, year: 2017, duration: 141, cluster: 1, genres: ["Action"]},
+            {title: "Deadpool", rating: 8.0, year: 2016, duration: 108, cluster: 4, genres: ["Action", "Comedy"]},
+            {title: "Guardians of the Galaxy", rating: 8.0, year: 2014, duration: 121, cluster: 1, genres: ["Action", "Comedy"]},
+            {title: "Fast & Furious", rating: 6.5, year: 2009, duration: 107, cluster: 1, genres: ["Action"]},
+            {title: "Mission: Impossible", rating: 7.1, year: 1996, duration: 110, cluster: 1, genres: ["Action"]},
+            {title: "Top Gun", rating: 6.9, year: 1986, duration: 110, cluster: 1, genres: ["Action"]},
+            {title: "Mad Max: Fury Road", rating: 8.1, year: 2015, duration: 120, cluster: 1, genres: ["Action"]},
+            {title: "Blade Runner 2049", rating: 8.0, year: 2017, duration: 164, cluster: 3, genres: ["Drama"]},
+            {title: "Dune", rating: 8.0, year: 2021, duration: 155, cluster: 3, genres: ["Action", "Drama"]},
+            {title: "La La Land", rating: 8.0, year: 2016, duration: 128, cluster: 2, genres: ["Drama", "Romance"]},
+            {title: "Whiplash", rating: 8.5, year: 2014, duration: 106, cluster: 0, genres: ["Drama"]}
+        ];
+
+        let selectedMovie = null;
+        let filteredMovies = [...movieData];
+        let recommendationCount = 0;
+
+        // Initialize the app
+        function initializeApp() {
+            displayMovies(movieData);
+            updateStats();
+            setupSearch();
+        }
+
+        // Display movies in the list
+        function displayMovies(movies) {
+            const movieListElement = document.getElementById('movieList');
+            movieListElement.innerHTML = '';
+
+            movies.forEach(movie => {
+                const movieElement = document.createElement('div');
+                movieElement.className = 'movie-item';
+                movieElement.onclick = () => selectMovie(movie);
+
+                movieElement.innerHTML = `
+                    <div class="movie-title">${movie.title}</div>
+                    <div class="movie-details">
+                        <span>⭐ ${movie.rating}</span>
+                        <span>📅 ${movie.year}</span>
+                        <span>⏱️ ${movie.duration}min</span>
+                        <span>🎭 ${movie.genres.join(', ')}</span>
+                    </div>
+                `;
+
+                movieListElement.appendChild(movieElement);
+            });
+        }
+
+        // Setup search functionality
+        function setupSearch() {
+            const searchInput = document.getElementById('searchInput');
+            searchInput.addEventListener('input', function() {
+                const query = this.value.toLowerCase();
+                filteredMovies = movieData.filter(movie => 
+                    movie.title.toLowerCase().includes(query)
+                );
+                displayMovies(filteredMovies);
+            });
+
+            searchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    searchMovies();
+                }
+            });
+        }
+
+        // Select a movie
+        function selectMovie(movie) {
+            selectedMovie = movie;
+            
+            // Update UI to show selection
+            document.querySelectorAll('.movie-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            event.target.closest('.movie-item').classList.add('selected');
+
+            // Generate recommendations
+            generateRecommendations(movie);
+        }
+
+        // Search movies function
+        function searchMovies() {
+            const searchInput = document.getElementById('searchInput');
+            const query = searchInput.value.trim();
+            
+            if (!query) {
+                alert('Please enter a movie name to search!');
+                return;
+            }
+
+            const foundMovie = movieData.find(movie => 
+                movie.title.toLowerCase().includes(query.toLowerCase())
+            );
+
+            if (foundMovie) {
+                selectMovie(foundMovie);
+                // Scroll to recommendations
+                document.getElementById('recommendationsSection').scrollIntoView({ 
+                    behavior: 'smooth' 
+                });
+            } else {
+                alert('Movie not found! Please try a different title.');
+            }
+        }
+
+        // Generate recommendations based on clustering
+        function generateRecommendations(selectedMovie) {
+            const recommendationsSection = document.getElementById('recommendationsSection');
+            const selectedMovieInfo = document.getElementById('selectedMovieInfo');
+            const recommendationsGrid = document.getElementById('recommendationsGrid');
+
+            // Show loading
+            recommendationsGrid.innerHTML = '<div class="loading"><div class="spinner"></div>Generating recommendations...</div>';
+            recommendationsSection.style.display = 'block';
+
+            // Simulate processing delay
+            setTimeout(() => {
+                // Find movies in the same cluster
+                const sameClusterMovies = movieData.filter(movie => 
+                    movie.cluster === selectedMovie.cluster && movie.title !== selectedMovie.title
+                );
+
+                // Sort by rating and take top 6
+                const recommendations = sameClusterMovies
+                    .sort((a, b) => b.rating - a.rating)
+                    .slice(0, 6);
+
+                // Display selected movie info
+                selectedMovieInfo.innerHTML = `
+                    <div class="selected-movie">
+                        <h3>Selected Movie: ${selectedMovie.title}</h3>
+                        <div style="display: flex; gap: 20px; justify-content: center; flex-wrap: wrap;">
+                            <span>⭐ Rating: ${selectedMovie.rating}/10</span>
+                            <span>📅 Year: ${selectedMovie.year}</span>
+                            <span>⏱️ Duration: ${selectedMovie.duration} minutes</span>
+                            <span>🎭 Genres: ${selectedMovie.genres.join(', ')}</span>
+                        </div>
+                        <div class="cluster-info">
+                            <strong>🎯 Cluster ${selectedMovie.cluster}</strong> - Movies with similar characteristics
+                        </div>
+                    </div>
+                `;
+
+                // Display recommendations
+                if (recommendations.length > 0) {
+                    recommendationsGrid.innerHTML = recommendations.map((movie, index) => `
+                        <div class="recommendation-card">
+                            <div class="recommendation-rank">${index + 1}</div>
+                            <div class="recommendation-title">${movie.title}</div>
+                            <div class="recommendation-details">
+                                <div class="detail-item">
+                                    <span>⭐</span>
+                                    <span>${movie.rating}/10</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span>📅</span>
+                                    <span>${movie.year}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span>⏱️</span>
+                                    <span>${movie.duration}min</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span>🎯</span>
+                                    <span>Cluster ${movie.cluster}</span>
+                                </div>
+                            </div>
+                            <div class="rating-bar">
+                                <div class="rating-fill" style="width: ${(movie.rating / 10) * 100}%"></div>
+                            </div>
+                            <div class="genres">
+                                ${movie.genres.map(genre => `<span class="genre-tag">${genre}</span>`).join('')}
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    recommendationsGrid.innerHTML = '<div class="no-results">No recommendations found for this movie.</div>';
+                }
+
+                // Update recommendation count
+                recommendationCount++;
+                updateStats();
+            }, 1000);
+        }
+
+        // Update statistics
+        function updateStats() {
+            document.getElementById('totalMovies').textContent = movieData.length;
+            document.getElementById('recommendations').textContent = recommendationCount;
+            
+            const avgRating = movieData.reduce((sum, movie) => sum + movie.rating, 0) / movieData.length;
+            document.getElementById('avgRating').textContent = avgRating.toFixed(1);
+        }
+
+        // Initialize the app when page loads
+        document.addEventListener('DOMContentLoaded', initializeApp);
+    </script>
+</body>
+</html>
